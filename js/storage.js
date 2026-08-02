@@ -52,11 +52,12 @@ function addDish(name, category) {
   return dish;
 }
 
-function updateDish(id, name) {
+function updateDish(id, name, category) {
   const dishes = loadDishes();
   const dish = dishes.find((d) => d.id === id);
   if (dish) {
     dish.name = name;
+    dish.category = category;
     saveDishes(dishes);
   }
   return dish;

@@ -24,12 +24,10 @@
 
   <main>
     <section id="tab-carta" class="tab-panel" role="tabpanel">
-      <div class="category-bar">
-        <button type="button" class="category-btn is-active" data-category="tapas">Tapas</button>
-      </div>
+      <div id="carta-category-bar" class="category-bar" role="tablist"></div>
 
       <div id="dish-checklist" class="dish-checklist"></div>
-      <p id="empty-carta-msg" class="empty-msg" hidden>Todavía no hay tapas en el listado. Añade alguna desde «Gestionar platos».</p>
+      <p id="empty-carta-msg" class="empty-msg" hidden></p>
 
       <div class="carta-actions">
         <span id="selected-count" class="selected-count">0 tapas seleccionadas</span>
@@ -49,14 +47,20 @@
           <label for="dish-name">Nombre del plato</label>
           <input type="text" id="dish-name" name="dish-name" placeholder="p. ej. Croquetas de jamón" maxlength="60" required autocomplete="off">
         </div>
+        <div class="field field-category">
+          <label for="dish-category">Categoría</label>
+          <select id="dish-category" name="dish-category"></select>
+        </div>
         <div class="form-actions">
           <button type="submit" id="dish-submit" class="btn btn-primary">Añadir plato</button>
           <button type="button" id="dish-cancel" class="btn btn-secondary" hidden>Cancelar</button>
         </div>
       </form>
 
+      <div id="gestion-category-bar" class="category-bar" role="tablist"></div>
+
       <ul id="dish-list" class="dish-list"></ul>
-      <p id="empty-gestion-msg" class="empty-msg" hidden>Todavía no has añadido ningún plato.</p>
+      <p id="empty-gestion-msg" class="empty-msg" hidden></p>
     </section>
   </main>
 </div>
