@@ -13,11 +13,14 @@ const DEFAULT_COPIES = 10;
 const MIN_COPIES = 1;
 const MAX_COPIES = 60;
 
+const SESSION_PASSWORD_KEY = 'barpepe.admin-password';
+
 const state = {
   selectedIds: new Set(),
   editingId: null,
   cartaCategory: DEFAULT_CATEGORY,
   gestionCategory: DEFAULT_CATEGORY,
+  adminPassword: sessionStorage.getItem(SESSION_PASSWORD_KEY),
 };
 
 const el = {
@@ -26,12 +29,19 @@ const el = {
     carta: document.getElementById('tab-carta'),
     gestion: document.getElementById('tab-gestion'),
   },
+  loadStatus: document.getElementById('load-status'),
   cartaCategoryBar: document.getElementById('carta-category-bar'),
   checklist: document.getElementById('dish-checklist'),
   emptyCartaMsg: document.getElementById('empty-carta-msg'),
   selectedCount: document.getElementById('selected-count'),
   btnGenerate: document.getElementById('btn-generate'),
   copiesInput: document.getElementById('copies-input'),
+  gate: document.getElementById('gestion-gate'),
+  gateForm: document.getElementById('gate-form'),
+  gatePassword: document.getElementById('gate-password'),
+  gateError: document.getElementById('gate-error'),
+  gestionContent: document.getElementById('gestion-content'),
+  btnLogout: document.getElementById('btn-logout'),
   form: document.getElementById('dish-form'),
   formId: document.getElementById('dish-id'),
   formName: document.getElementById('dish-name'),
@@ -66,6 +76,7 @@ function switchTab(name) {
   Object.entries(el.panels).forEach(([key, panel]) => {
     panel.hidden = key !== name;
   });
+  if (name === 'gestion') renderGestionAccess();
 }
 
 // ---------------------------------------------------------------
@@ -94,7 +105,7 @@ function renderChecklist() {
     renderChecklist();
   });
 
-  const dishes = loadDishes().filter((d) => d.category === state.cartaCategory);
+  const dishes = getDishes().filter((d) => d.category === state.cartaCategory);
 
   el.checklist.innerHTML = '';
   el.emptyCartaMsg.hidden = dishes.length > 0;
@@ -134,7 +145,7 @@ function updateCartaActions() {
 el.btnGenerate.addEventListener('click', generatePrintSheet);
 
 function generatePrintSheet() {
-  const dishes = loadDishes();
+  const dishes = getDishes();
   const selected = dishes.filter((d) => state.selectedIds.has(d.id));
   if (selected.length === 0) return;
 
@@ -159,7 +170,7 @@ function buildComanda(dishes) {
   // Se asume una única categoría por selección (el filtro de "Generar
   // carta" ya restringe qué platos se pueden marcar a la vez).
   const category = dishes[0].category;
-  const description = loadCategoryDescriptions()[category] || '';
+  const description = getCategoryDescriptions()[category] || '';
   const rows = dishes.map(buildComandaRow).join('');
 
   return `
@@ -190,6 +201,54 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------
+// Acceso protegido a "Gestionar platos"
+// ---------------------------------------------------------------
+function renderGestionAccess() {
+  const unlocked = Boolean(state.adminPassword);
+  el.gate.hidden = unlocked;
+  el.gestionContent.hidden = !unlocked;
+  if (unlocked) renderManageList();
+}
+
+el.gateForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const password = el.gatePassword.value;
+  el.gateError.hidden = true;
+
+  const ok = await login(password).catch(() => false);
+  if (!ok) {
+    el.gateError.textContent = 'Contraseña incorrecta.';
+    el.gateError.hidden = false;
+    return;
+  }
+
+  state.adminPassword = password;
+  sessionStorage.setItem(SESSION_PASSWORD_KEY, password);
+  el.gateForm.reset();
+  renderGestionAccess();
+});
+
+el.btnLogout.addEventListener('click', () => {
+  state.adminPassword = null;
+  sessionStorage.removeItem(SESSION_PASSWORD_KEY);
+  renderGestionAccess();
+});
+
+function handleWriteError(err) {
+  if (err.message === 'Contraseña incorrecta') {
+    state.adminPassword = null;
+    sessionStorage.removeItem(SESSION_PASSWORD_KEY);
+    renderGestionAccess();
+    el.gateError.textContent = 'La sesión ha caducado o la contraseña ha cambiado. Vuelve a introducirla.';
+    el.gateError.hidden = false;
+  } else {
+    alert(err.message || 'No se pudieron guardar los cambios. Comprueba tu conexión e inténtalo de nuevo.');
+  }
+  renderManageList();
+  renderChecklist();
+}
+
+// ---------------------------------------------------------------
 // Pestaña: Gestionar platos (CRUD)
 // ---------------------------------------------------------------
 function populateCategorySelect(selectedId) {
@@ -205,11 +264,16 @@ function populateCategorySelect(selectedId) {
 
 function renderCategoryDescription() {
   el.categoryDescLabel.textContent = `Descripción de «${categoryLabel(state.gestionCategory)}» (aparece en la comanda)`;
-  el.categoryDescInput.value = loadCategoryDescriptions()[state.gestionCategory] || '';
+  el.categoryDescInput.value = getCategoryDescriptions()[state.gestionCategory] || '';
 }
 
-el.categoryDescInput.addEventListener('change', () => {
-  saveCategoryDescription(state.gestionCategory, el.categoryDescInput.value.trim());
+el.categoryDescInput.addEventListener('change', async () => {
+  const description = el.categoryDescInput.value.trim();
+  try {
+    await saveCategoryDescription(state.gestionCategory, description, state.adminPassword);
+  } catch (err) {
+    handleWriteError(err);
+  }
 });
 
 function renderManageList() {
@@ -220,7 +284,7 @@ function renderManageList() {
 
   renderCategoryDescription();
 
-  const dishes = loadDishes().filter((d) => d.category === state.gestionCategory);
+  const dishes = getDishes().filter((d) => d.category === state.gestionCategory);
 
   el.dishList.innerHTML = '';
   el.emptyGestionMsg.hidden = dishes.length > 0;
@@ -275,36 +339,64 @@ function resetForm() {
 
 el.formCancel.addEventListener('click', resetForm);
 
-el.form.addEventListener('submit', (event) => {
+el.form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const name = el.formName.value.trim();
   const category = el.formCategory.value;
   if (!name) return;
 
-  if (state.editingId) {
-    updateDish(state.editingId, name, category);
-  } else {
-    addDish(name, category);
+  try {
+    if (state.editingId) {
+      await updateDish(state.editingId, name, category, state.adminPassword);
+    } else {
+      await addDish(name, category, state.adminPassword);
+    }
+    resetForm();
+    renderManageList();
+    renderChecklist();
+  } catch (err) {
+    handleWriteError(err);
   }
-
-  resetForm();
-  renderManageList();
-  renderChecklist();
 });
 
-function handleDelete(dish) {
+async function handleDelete(dish) {
   const confirmed = window.confirm(`¿Eliminar «${dish.name}» del listado de platos?`);
   if (!confirmed) return;
 
-  deleteDish(dish.id);
-  if (state.editingId === dish.id) resetForm();
-  renderManageList();
-  renderChecklist();
+  try {
+    await deleteDish(dish.id, state.adminPassword);
+    if (state.editingId === dish.id) resetForm();
+    renderManageList();
+    renderChecklist();
+  } catch (err) {
+    handleWriteError(err);
+  }
 }
 
 // ---------------------------------------------------------------
 // Arranque
 // ---------------------------------------------------------------
-populateCategorySelect(state.gestionCategory);
-renderChecklist();
-renderManageList();
+async function init() {
+  el.tabButtons.forEach((btn) => { btn.disabled = true; });
+
+  try {
+    await fetchData();
+  } catch (err) {
+    el.loadStatus.innerHTML = `
+      <p>${escapeHtml(err.message || 'No se pudo cargar el listado de platos.')}</p>
+      <button type="button" id="retry-load" class="btn btn-secondary">Reintentar</button>
+    `;
+    document.getElementById('retry-load').addEventListener('click', init);
+    return;
+  }
+
+  el.tabButtons.forEach((btn) => { btn.disabled = false; });
+  el.loadStatus.hidden = true;
+  el.panels.carta.hidden = false;
+
+  populateCategorySelect(state.gestionCategory);
+  renderChecklist();
+  if (!el.panels.gestion.hidden) renderGestionAccess();
+}
+
+init();

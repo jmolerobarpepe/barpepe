@@ -23,7 +23,11 @@
   </nav>
 
   <main>
-    <section id="tab-carta" class="tab-panel" role="tabpanel">
+    <div id="load-status" class="load-status">
+      <p>Cargando platos…</p>
+    </div>
+
+    <section id="tab-carta" class="tab-panel" role="tabpanel" hidden>
       <div id="carta-category-bar" class="category-bar" role="tablist"></div>
 
       <div id="dish-checklist" class="dish-checklist"></div>
@@ -41,31 +45,48 @@
     </section>
 
     <section id="tab-gestion" class="tab-panel" role="tabpanel" hidden>
-      <form id="dish-form" class="dish-form">
-        <input type="hidden" id="dish-id" value="">
-        <div class="field">
-          <label for="dish-name">Nombre del plato</label>
-          <input type="text" id="dish-name" name="dish-name" placeholder="p. ej. Croquetas de jamón" maxlength="60" required autocomplete="off">
-        </div>
-        <div class="field field-category">
-          <label for="dish-category">Categoría</label>
-          <select id="dish-category" name="dish-category"></select>
-        </div>
-        <div class="form-actions">
-          <button type="submit" id="dish-submit" class="btn btn-primary">Añadir plato</button>
-          <button type="button" id="dish-cancel" class="btn btn-secondary" hidden>Cancelar</button>
-        </div>
-      </form>
-
-      <div id="gestion-category-bar" class="category-bar" role="tablist"></div>
-
-      <div class="field category-desc-field">
-        <label for="category-description" id="category-description-label">Descripción de la categoría</label>
-        <input type="text" id="category-description" maxlength="120" placeholder="p. ej. Pequeñas raciones para compartir en la barra" autocomplete="off">
+      <div id="gestion-gate" class="gate" hidden>
+        <form id="gate-form" class="gate-form">
+          <div class="field">
+            <label for="gate-password">Contraseña de gestión</label>
+            <input type="password" id="gate-password" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+        <p id="gate-error" class="gate-error" hidden></p>
       </div>
 
-      <ul id="dish-list" class="dish-list"></ul>
-      <p id="empty-gestion-msg" class="empty-msg" hidden></p>
+      <div id="gestion-content" hidden>
+        <div class="gestion-toolbar">
+          <button type="button" id="btn-logout" class="btn-text">Cerrar sesión</button>
+        </div>
+
+        <form id="dish-form" class="dish-form">
+          <input type="hidden" id="dish-id" value="">
+          <div class="field">
+            <label for="dish-name">Nombre del plato</label>
+            <input type="text" id="dish-name" name="dish-name" placeholder="p. ej. Croquetas de jamón" maxlength="60" required autocomplete="off">
+          </div>
+          <div class="field field-category">
+            <label for="dish-category">Categoría</label>
+            <select id="dish-category" name="dish-category"></select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="dish-submit" class="btn btn-primary">Añadir plato</button>
+            <button type="button" id="dish-cancel" class="btn btn-secondary" hidden>Cancelar</button>
+          </div>
+        </form>
+
+        <div id="gestion-category-bar" class="category-bar" role="tablist"></div>
+
+        <div class="field category-desc-field">
+          <label for="category-description" id="category-description-label">Descripción de la categoría</label>
+          <input type="text" id="category-description" maxlength="120" placeholder="p. ej. Pequeñas raciones para compartir en la barra" autocomplete="off">
+        </div>
+
+        <ul id="dish-list" class="dish-list"></ul>
+        <p id="empty-gestion-msg" class="empty-msg" hidden></p>
+      </div>
     </section>
   </main>
 </div>

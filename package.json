@@ -1,0 +1,9 @@
+{
+  "name": "barpepe",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Generador de comandas de Bar Pepe y Consuelo",
+  "dependencies": {
+    "@upstash/redis": "^1.38.1"
+  }
+}

@@ -1,89 +1,117 @@
-// Persistencia local del listado de platos (sin backend).
-// Estructura de cada plato: { id, category, name }
-// `category` prepara el modelo para futuras categorías además de "tapas".
+// Cliente de la API /api/dishes: la lista de platos y las descripciones
+// de categoría viven en una base de datos compartida (Vercel KV), no en
+// localStorage, así que son las mismas en cualquier dispositivo.
+//
+// Se mantiene una copia en memoria (`cache`) para poder leer de forma
+// síncrona desde la interfaz; cada escritura actualiza la copia local de
+// forma optimista y la envía entera al servidor. Si el servidor la
+// rechaza (contraseña incorrecta, red caída…), se revierte el cambio.
 
-const STORAGE_KEY = 'barpepe.platos.v1';
-
-const DEFAULT_DISHES = [
-  'Patatas bravas',
-  'Croquetas de jamón',
-  'Tortilla española',
-  'Boquerones en vinagre',
-  'Pimientos de padrón',
-  'Gambas al ajillo',
-].map((name, i) => ({ id: `seed-${i}`, category: 'tapas', name }));
+let cache = null;
 
 function uid() {
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function loadDishes() {
-  let raw;
-  try {
-    raw = localStorage.getItem(STORAGE_KEY);
-  } catch (err) {
-    console.error('No se pudo acceder a localStorage', err);
-    return [];
+async function fetchData() {
+  const res = await fetch('/api/dishes');
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || 'No se pudo cargar el listado de platos');
   }
-
-  if (raw === null) {
-    saveDishes(DEFAULT_DISHES);
-    return DEFAULT_DISHES.slice();
-  }
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('El listado de platos guardado está corrupto', err);
-    return [];
-  }
+  cache = await res.json();
+  return cache;
 }
 
-function saveDishes(dishes) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(dishes));
+function ensureLoaded() {
+  if (!cache) throw new Error('Los datos todavía no se han cargado');
 }
 
-function addDish(name, category) {
-  const dishes = loadDishes();
+function getDishes() {
+  ensureLoaded();
+  return cache.dishes;
+}
+
+function getCategoryDescriptions() {
+  ensureLoaded();
+  return cache.categoryDescriptions;
+}
+
+async function persist(password) {
+  const res = await fetch('/api/dishes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      password,
+      dishes: cache.dishes,
+      categoryDescriptions: cache.categoryDescriptions,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || 'No se pudieron guardar los cambios');
+  }
+
+  cache = await res.json();
+  return cache;
+}
+
+async function addDish(name, category, password) {
+  ensureLoaded();
+  const previous = cache.dishes;
   const dish = { id: uid(), category, name };
-  dishes.push(dish);
-  saveDishes(dishes);
-  return dish;
-}
-
-function updateDish(id, name, category) {
-  const dishes = loadDishes();
-  const dish = dishes.find((d) => d.id === id);
-  if (dish) {
-    dish.name = name;
-    dish.category = category;
-    saveDishes(dishes);
-  }
-  return dish;
-}
-
-function deleteDish(id) {
-  const dishes = loadDishes().filter((d) => d.id !== id);
-  saveDishes(dishes);
-}
-
-// Descripción por categoría (texto libre, aparece en la comanda impresa).
-const CATEGORY_DESCRIPTIONS_KEY = 'barpepe.descripciones-categoria.v1';
-
-function loadCategoryDescriptions() {
+  cache.dishes = [...previous, dish];
   try {
-    const raw = localStorage.getItem(CATEGORY_DESCRIPTIONS_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    await persist(password);
+    return dish;
   } catch (err) {
-    console.error('Las descripciones de categoría guardadas están corruptas', err);
-    return {};
+    cache.dishes = previous;
+    throw err;
   }
 }
 
-function saveCategoryDescription(categoryId, description) {
-  const descriptions = loadCategoryDescriptions();
-  descriptions[categoryId] = description;
-  localStorage.setItem(CATEGORY_DESCRIPTIONS_KEY, JSON.stringify(descriptions));
+async function updateDish(id, name, category, password) {
+  ensureLoaded();
+  const previous = cache.dishes;
+  cache.dishes = previous.map((d) => (d.id === id ? { ...d, name, category } : d));
+  try {
+    await persist(password);
+  } catch (err) {
+    cache.dishes = previous;
+    throw err;
+  }
+}
+
+async function deleteDish(id, password) {
+  ensureLoaded();
+  const previous = cache.dishes;
+  cache.dishes = previous.filter((d) => d.id !== id);
+  try {
+    await persist(password);
+  } catch (err) {
+    cache.dishes = previous;
+    throw err;
+  }
+}
+
+async function saveCategoryDescription(categoryId, description, password) {
+  ensureLoaded();
+  const previous = cache.categoryDescriptions;
+  cache.categoryDescriptions = { ...previous, [categoryId]: description };
+  try {
+    await persist(password);
+  } catch (err) {
+    cache.categoryDescriptions = previous;
+    throw err;
+  }
+}
+
+async function login(password) {
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  return res.ok;
 }
