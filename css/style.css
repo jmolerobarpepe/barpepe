@@ -365,6 +365,10 @@ main {
   flex: 0 1 180px;
 }
 
+.category-desc-field {
+  margin-bottom: 1.25rem;
+}
+
 .form-actions {
   display: flex;
   gap: 0.5rem;
@@ -462,7 +466,7 @@ main {
     margin: 0;
   }
 
-  .comanda-title {
+  .comanda-category {
     font-family: var(--font-display);
     font-weight: 400;
     font-size: 12pt;
@@ -470,21 +474,11 @@ main {
     margin: 1mm 0 0;
   }
 
-  .comanda-section + .comanda-section {
-    margin-top: 3mm;
-  }
-
-  .comanda-section-title {
-    font-family: var(--font-mono);
-    font-size: 6pt;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--dorado);
-    background: var(--burdeos);
-    display: inline-block;
-    padding: 0.5mm 1.5mm;
-    border-radius: 2px;
-    margin: 0 0 1.5mm;
+  .comanda-description {
+    font-size: 7.5pt;
+    font-style: italic;
+    color: var(--tinta);
+    margin: 1mm 0 0;
   }
 
   .comanda-rows {

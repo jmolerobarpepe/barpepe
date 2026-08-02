@@ -39,6 +39,8 @@ const el = {
   formSubmit: document.getElementById('dish-submit'),
   formCancel: document.getElementById('dish-cancel'),
   gestionCategoryBar: document.getElementById('gestion-category-bar'),
+  categoryDescLabel: document.getElementById('category-description-label'),
+  categoryDescInput: document.getElementById('category-description'),
   dishList: document.getElementById('dish-list'),
   emptyGestionMsg: document.getElementById('empty-gestion-msg'),
   printArea: document.getElementById('print-area'),
@@ -154,29 +156,20 @@ function clamp(value, min, max) {
 }
 
 function buildComanda(dishes) {
-  const groups = CATEGORIES.map((cat) => ({
-    label: cat.label,
-    dishes: dishes.filter((d) => d.category === cat.id),
-  })).filter((group) => group.dishes.length > 0);
-
-  const sections = groups
-    .map(
-      (group) => `
-        <div class="comanda-section">
-          <p class="comanda-section-title">${escapeHtml(group.label)}</p>
-          <div class="comanda-rows">${group.dishes.map(buildComandaRow).join('')}</div>
-        </div>
-      `,
-    )
-    .join('');
+  // Se asume una única categoría por selección (el filtro de "Generar
+  // carta" ya restringe qué platos se pueden marcar a la vez).
+  const category = dishes[0].category;
+  const description = loadCategoryDescriptions()[category] || '';
+  const rows = dishes.map(buildComandaRow).join('');
 
   return `
     <div class="comanda">
       <div class="comanda-header">
         <p class="comanda-bar-name">Bar Pepe y Consuelo</p>
-        <p class="comanda-title">Comanda</p>
+        <p class="comanda-category">${escapeHtml(categoryLabel(category))}</p>
+        ${description ? `<p class="comanda-description">${escapeHtml(description)}</p>` : ''}
       </div>
-      ${sections}
+      <div class="comanda-rows">${rows}</div>
     </div>
   `;
 }
@@ -210,11 +203,22 @@ function populateCategorySelect(selectedId) {
   el.formCategory.value = selectedId;
 }
 
+function renderCategoryDescription() {
+  el.categoryDescLabel.textContent = `Descripción de «${categoryLabel(state.gestionCategory)}» (aparece en la comanda)`;
+  el.categoryDescInput.value = loadCategoryDescriptions()[state.gestionCategory] || '';
+}
+
+el.categoryDescInput.addEventListener('change', () => {
+  saveCategoryDescription(state.gestionCategory, el.categoryDescInput.value.trim());
+});
+
 function renderManageList() {
   renderCategoryBar(el.gestionCategoryBar, state.gestionCategory, (categoryId) => {
     state.gestionCategory = categoryId;
     renderManageList();
   });
+
+  renderCategoryDescription();
 
   const dishes = loadDishes().filter((d) => d.category === state.gestionCategory);
 

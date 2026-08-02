@@ -67,3 +67,23 @@ function deleteDish(id) {
   const dishes = loadDishes().filter((d) => d.id !== id);
   saveDishes(dishes);
 }
+
+// Descripción por categoría (texto libre, aparece en la comanda impresa).
+const CATEGORY_DESCRIPTIONS_KEY = 'barpepe.descripciones-categoria.v1';
+
+function loadCategoryDescriptions() {
+  try {
+    const raw = localStorage.getItem(CATEGORY_DESCRIPTIONS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (err) {
+    console.error('Las descripciones de categoría guardadas están corruptas', err);
+    return {};
+  }
+}
+
+function saveCategoryDescription(categoryId, description) {
+  const descriptions = loadCategoryDescriptions();
+  descriptions[categoryId] = description;
+  localStorage.setItem(CATEGORY_DESCRIPTIONS_KEY, JSON.stringify(descriptions));
+}
