@@ -1,5 +1,9 @@
 // Lógica de la app: pestañas, selección para la carta, CRUD y generación
 // de la hoja imprimible. Sin frameworks — DOM directo.
+//
+// Sin async/await, encadenado opcional (?.) ni Object.entries: se usan
+// Promises con .then/.catch para que siga funcionando en navegadores muy
+// antiguos (p. ej. Chrome 49 de Windows XP).
 
 const CATEGORIES = [
   { id: 'tapas', label: 'Tapas' },
@@ -57,7 +61,8 @@ const el = {
 };
 
 function categoryLabel(id) {
-  return CATEGORIES.find((c) => c.id === id)?.label ?? id;
+  const match = CATEGORIES.find((c) => c.id === id);
+  return match ? match.label : id;
 }
 
 // ---------------------------------------------------------------
@@ -73,8 +78,8 @@ function switchTab(name) {
     btn.classList.toggle('is-active', active);
     btn.setAttribute('aria-selected', String(active));
   });
-  Object.entries(el.panels).forEach(([key, panel]) => {
-    panel.hidden = key !== name;
+  Object.keys(el.panels).forEach((key) => {
+    el.panels[key].hidden = key !== name;
   });
   if (name === 'gestion') renderGestionAccess();
 }
@@ -210,22 +215,25 @@ function renderGestionAccess() {
   if (unlocked) renderManageList();
 }
 
-el.gateForm.addEventListener('submit', async (event) => {
+el.gateForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const password = el.gatePassword.value;
   el.gateError.hidden = true;
 
-  const ok = await login(password).catch(() => false);
-  if (!ok) {
-    el.gateError.textContent = 'Contraseña incorrecta.';
-    el.gateError.hidden = false;
-    return;
-  }
+  login(password)
+    .catch(() => false)
+    .then((ok) => {
+      if (!ok) {
+        el.gateError.textContent = 'Contraseña incorrecta.';
+        el.gateError.hidden = false;
+        return;
+      }
 
-  state.adminPassword = password;
-  sessionStorage.setItem(SESSION_PASSWORD_KEY, password);
-  el.gateForm.reset();
-  renderGestionAccess();
+      state.adminPassword = password;
+      sessionStorage.setItem(SESSION_PASSWORD_KEY, password);
+      el.gateForm.reset();
+      renderGestionAccess();
+    });
 });
 
 el.btnLogout.addEventListener('click', () => {
@@ -267,13 +275,9 @@ function renderCategoryDescription() {
   el.categoryDescInput.value = getCategoryDescriptions()[state.gestionCategory] || '';
 }
 
-el.categoryDescInput.addEventListener('change', async () => {
+el.categoryDescInput.addEventListener('change', () => {
   const description = el.categoryDescInput.value.trim();
-  try {
-    await saveCategoryDescription(state.gestionCategory, description, state.adminPassword);
-  } catch (err) {
-    handleWriteError(err);
-  }
+  saveCategoryDescription(state.gestionCategory, description, state.adminPassword).catch(handleWriteError);
 });
 
 function renderManageList() {
@@ -339,64 +343,61 @@ function resetForm() {
 
 el.formCancel.addEventListener('click', resetForm);
 
-el.form.addEventListener('submit', async (event) => {
+el.form.addEventListener('submit', (event) => {
   event.preventDefault();
   const name = el.formName.value.trim();
   const category = el.formCategory.value;
   if (!name) return;
 
-  try {
-    if (state.editingId) {
-      await updateDish(state.editingId, name, category, state.adminPassword);
-    } else {
-      await addDish(name, category, state.adminPassword);
-    }
-    resetForm();
-    renderManageList();
-    renderChecklist();
-  } catch (err) {
-    handleWriteError(err);
-  }
+  const writePromise = state.editingId
+    ? updateDish(state.editingId, name, category, state.adminPassword)
+    : addDish(name, category, state.adminPassword);
+
+  writePromise
+    .then(() => {
+      resetForm();
+      renderManageList();
+      renderChecklist();
+    })
+    .catch(handleWriteError);
 });
 
-async function handleDelete(dish) {
+function handleDelete(dish) {
   const confirmed = window.confirm(`¿Eliminar «${dish.name}» del listado de platos?`);
   if (!confirmed) return;
 
-  try {
-    await deleteDish(dish.id, state.adminPassword);
-    if (state.editingId === dish.id) resetForm();
-    renderManageList();
-    renderChecklist();
-  } catch (err) {
-    handleWriteError(err);
-  }
+  deleteDish(dish.id, state.adminPassword)
+    .then(() => {
+      if (state.editingId === dish.id) resetForm();
+      renderManageList();
+      renderChecklist();
+    })
+    .catch(handleWriteError);
 }
 
 // ---------------------------------------------------------------
 // Arranque
 // ---------------------------------------------------------------
-async function init() {
+function init() {
   el.tabButtons.forEach((btn) => { btn.disabled = true; });
 
-  try {
-    await fetchData();
-  } catch (err) {
-    el.loadStatus.innerHTML = `
-      <p>${escapeHtml(err.message || 'No se pudo cargar el listado de platos.')}</p>
-      <button type="button" id="retry-load" class="btn btn-secondary">Reintentar</button>
-    `;
-    document.getElementById('retry-load').addEventListener('click', init);
-    return;
-  }
+  fetchData()
+    .then(() => {
+      el.tabButtons.forEach((btn) => { btn.disabled = false; });
+      el.loadStatus.hidden = true;
+      el.panels.carta.hidden = false;
 
-  el.tabButtons.forEach((btn) => { btn.disabled = false; });
-  el.loadStatus.hidden = true;
-  el.panels.carta.hidden = false;
-
-  populateCategorySelect(state.gestionCategory);
-  renderChecklist();
-  if (!el.panels.gestion.hidden) renderGestionAccess();
+      populateCategorySelect(state.gestionCategory);
+      renderChecklist();
+      if (!el.panels.gestion.hidden) renderGestionAccess();
+    })
+    .catch((err) => {
+      el.loadStatus.innerHTML = `
+        <p>${escapeHtml(err.message || 'No se pudo cargar el listado de platos.')}</p>
+        <button type="button" id="retry-load" class="btn btn-secondary">Reintentar</button>
+      `;
+      document.getElementById('retry-load').addEventListener('click', init);
+    });
 }
 
 init();
