@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bar Pepe y Consuelo — Generador de carta</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="eyebrow">Ruta de tapas</p>
+      <h1 class="wordmark">Bar Pepe<span class="amp">&amp;</span>Consuelo</h1>
+    </div>
+    <div class="awning-fringe" aria-hidden="true"></div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" class="tab-btn is-active" data-tab="carta" role="tab" aria-selected="true">Generar carta</button>
+    <button type="button" class="tab-btn" data-tab="gestion" role="tab" aria-selected="false">Gestionar platos</button>
+  </nav>
+
+  <main>
+    <section id="tab-carta" class="tab-panel" role="tabpanel">
+      <div class="category-bar">
+        <button type="button" class="category-btn is-active" data-category="tapas">Tapas</button>
+      </div>
+
+      <div id="dish-checklist" class="dish-checklist"></div>
+      <p id="empty-carta-msg" class="empty-msg" hidden>Todavía no hay tapas en el listado. Añade alguna desde «Gestionar platos».</p>
+
+      <div class="carta-actions">
+        <span id="selected-count" class="selected-count">0 tapas seleccionadas</span>
+        <div class="copies-field">
+          <label for="copies-input">Copias</label>
+          <input type="number" id="copies-input" value="10" min="1" max="60">
+        </div>
+        <button type="button" id="btn-generate" class="btn btn-primary" disabled>Generar comanda para imprimir</button>
+      </div>
+      <p class="hint">Se genera una plantilla de comanda con los platos marcados, cada uno con una casilla para que el cliente apunte la cantidad. Se imprimen tantas copias recortables como indiques.</p>
+    </section>
+
+    <section id="tab-gestion" class="tab-panel" role="tabpanel" hidden>
+      <form id="dish-form" class="dish-form">
+        <input type="hidden" id="dish-id" value="">
+        <div class="field">
+          <label for="dish-name">Nombre del plato</label>
+          <input type="text" id="dish-name" name="dish-name" placeholder="p. ej. Croquetas de jamón" maxlength="60" required autocomplete="off">
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="dish-submit" class="btn btn-primary">Añadir plato</button>
+          <button type="button" id="dish-cancel" class="btn btn-secondary" hidden>Cancelar</button>
+        </div>
+      </form>
+
+      <ul id="dish-list" class="dish-list"></ul>
+      <p id="empty-gestion-msg" class="empty-msg" hidden>Todavía no has añadido ningún plato.</p>
+    </section>
+  </main>
+</div>
+
+<div id="print-area" class="print-area" aria-hidden="true"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

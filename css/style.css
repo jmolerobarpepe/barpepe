@@ -1,0 +1,494 @@
+/* ---------------------------------------------------------------
+   Tipografías locales (100% offline, sin CDN)
+----------------------------------------------------------------- */
+@font-face {
+  font-family: 'Abril Fatface';
+  src: url('../fonts/abril-fatface-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Work Sans';
+  src: url('../fonts/work-sans-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../fonts/jetbrains-mono-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------
+   Bar Pepe y Consuelo — tokens
+   Burdeos/dorado tomados de los toldos reales del bar.
+----------------------------------------------------------------- */
+:root {
+  --burdeos: #5c1a2b;
+  --granate: #862e44;
+  --dorado: #c9a227;
+  --dorado-suave: #e3c667;
+  --crema: #f6efe2;
+  --tinta: #2b1810;
+
+  --font-display: 'Abril Fatface', 'Georgia', serif;
+  --font-body: 'Work Sans', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+  --radius: 6px;
+  --shadow: 0 6px 18px rgba(43, 24, 16, 0.12);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--crema);
+  color: var(--tinta);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+button, input {
+  font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ---------------------------------------------------------------
+   Header — banda burdeos + fleco de toldo (elemento distintivo)
+----------------------------------------------------------------- */
+.site-header {
+  background: linear-gradient(180deg, var(--burdeos), var(--granate));
+}
+
+.header-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 2rem;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--dorado-suave);
+}
+
+.wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.1rem, 6vw, 3.2rem);
+  color: var(--crema);
+  letter-spacing: 0.01em;
+}
+
+.wordmark .amp {
+  display: inline-block;
+  margin: 0 0.35rem;
+  color: var(--dorado);
+  font-size: 0.8em;
+}
+
+.awning-fringe {
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='14'%3E%3Cpolygon points='0,0 20,0 10,14' fill='%23c9a227'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 20px 14px;
+}
+
+/* ---------------------------------------------------------------
+   Tabs
+----------------------------------------------------------------- */
+.tabs {
+  max-width: 720px;
+  margin: 1.75rem auto 0;
+  padding: 0 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(43, 24, 16, 0.15);
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 0.7rem 0.25rem;
+  margin-bottom: -1px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(43, 24, 16, 0.55);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab-btn + .tab-btn { margin-left: 1.25rem; }
+
+.tab-btn:hover { color: var(--burdeos); }
+
+.tab-btn.is-active {
+  color: var(--burdeos);
+  border-bottom-color: var(--dorado);
+}
+
+.tab-btn:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+.dish-checklist label:focus-within {
+  outline: 2px solid var(--granate);
+  outline-offset: 2px;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 4rem;
+}
+
+.tab-panel[hidden] { display: none; }
+
+/* ---------------------------------------------------------------
+   Generar carta
+----------------------------------------------------------------- */
+.category-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.category-btn {
+  background: var(--crema);
+  border: 1px solid var(--dorado);
+  color: var(--burdeos);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: default;
+}
+
+.category-btn.is-active {
+  background: var(--burdeos);
+  color: var(--crema);
+  border-color: var(--burdeos);
+}
+
+.dish-checklist {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.dish-checklist label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid rgba(43, 24, 16, 0.12);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dish-checklist label:hover {
+  border-color: var(--dorado);
+}
+
+.dish-checklist input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--burdeos);
+}
+
+.dish-checklist .dish-name {
+  font-weight: 500;
+}
+
+.carta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.selected-count {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: rgba(43, 24, 16, 0.65);
+  margin-right: auto;
+}
+
+.copies-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.copies-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(43, 24, 16, 0.7);
+}
+
+.copies-field input {
+  width: 4.5rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(43, 24, 16, 0.2);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  background: #fff;
+  color: var(--tinta);
+}
+
+.copies-field input:focus-visible {
+  border-color: var(--burdeos);
+}
+
+.hint {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: rgba(43, 24, 16, 0.55);
+}
+
+/* ---------------------------------------------------------------
+   Botones
+----------------------------------------------------------------- */
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.7rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--burdeos);
+  color: var(--crema);
+}
+
+.btn-primary:hover:not(:disabled) { background: var(--granate); }
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--burdeos);
+  border: 1px solid rgba(43, 24, 16, 0.25);
+}
+
+.btn-secondary:hover { border-color: var(--burdeos); }
+
+.btn-text {
+  background: none;
+  border: none;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-edit { color: var(--burdeos); }
+.btn-delete { color: var(--granate); }
+.btn-edit:hover, .btn-delete:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------------
+   Gestionar platos
+----------------------------------------------------------------- */
+.dish-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  flex: 1 1 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(43, 24, 16, 0.7);
+}
+
+.field input {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(43, 24, 16, 0.2);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--tinta);
+}
+
+.field input:focus-visible {
+  border-color: var(--burdeos);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dish-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.dish-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  background: #fff;
+  border: 1px solid rgba(43, 24, 16, 0.12);
+  border-radius: var(--radius);
+}
+
+.dish-list .dish-row-name {
+  font-weight: 500;
+}
+
+.dish-list .dish-row-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.empty-msg {
+  padding: 1rem;
+  text-align: center;
+  color: rgba(43, 24, 16, 0.55);
+  font-size: 0.9rem;
+  border: 1px dashed rgba(43, 24, 16, 0.25);
+  border-radius: var(--radius);
+}
+
+/* ---------------------------------------------------------------
+   Área de impresión — comandas recortables
+----------------------------------------------------------------- */
+.print-area { display: none; }
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  body * { visibility: hidden; }
+
+  #app, .tabs, .site-header { display: none !important; }
+
+  .print-area, .print-area * { visibility: visible; }
+
+  .print-area {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .comanda-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6mm;
+    align-content: start;
+  }
+
+  .comanda {
+    border: 1.5px dashed var(--dorado);
+    border-radius: 4px;
+    background: var(--crema);
+    padding: 4mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .comanda-header {
+    text-align: center;
+    margin-bottom: 3mm;
+    padding-bottom: 2mm;
+    border-bottom: 1px solid var(--dorado);
+  }
+
+  .comanda-bar-name {
+    font-family: var(--font-mono);
+    font-size: 6.5pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--granate);
+    margin: 0;
+  }
+
+  .comanda-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 12pt;
+    color: var(--burdeos);
+    margin: 1mm 0 0;
+  }
+
+  .comanda-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75mm;
+  }
+
+  .comanda-row {
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+  }
+
+  .comanda-qty-box {
+    width: 6.5mm;
+    height: 6.5mm;
+    flex-shrink: 0;
+    border: 1px solid var(--tinta);
+    border-radius: 2px;
+  }
+
+  .comanda-dish-name {
+    flex: 1;
+    font-size: 9.5pt;
+    color: var(--tinta);
+    border-bottom: 1px dotted rgba(43, 24, 16, 0.4);
+    padding-bottom: 0.5mm;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Responsive
+----------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .header-inner { padding: 2rem 1.25rem 1.5rem; }
+  .carta-actions { align-items: stretch; }
+  .carta-actions .btn { width: 100%; }
+  .dish-form { flex-direction: column; align-items: stretch; }
+}
