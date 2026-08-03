@@ -157,7 +157,7 @@ function generatePrintSheet() {
   const copies = clamp(
     parseInt(el.copiesInput.value, 10) || DEFAULT_COPIES,
     MIN_COPIES,
-    MAX_COPIES,
+    MAX_COPIES
   );
 
   const comandas = Array.from({ length: copies }, () => buildComanda(selected)).join('');
