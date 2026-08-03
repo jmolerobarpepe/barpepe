@@ -28,7 +28,7 @@ const state = {
 };
 
 const el = {
-  tabButtons: document.querySelectorAll('.tab-btn'),
+  tabButtons: Array.from(document.querySelectorAll('.tab-btn')),
   panels: {
     carta: document.getElementById('tab-carta'),
     gestion: document.getElementById('tab-gestion'),
@@ -133,7 +133,8 @@ function renderChecklist() {
     name.className = 'dish-name';
     name.textContent = dish.name;
 
-    label.append(checkbox, name);
+    label.appendChild(checkbox);
+    label.appendChild(name);
     el.checklist.appendChild(label);
   });
 
@@ -316,8 +317,10 @@ function renderManageList() {
     deleteBtn.textContent = 'Eliminar';
     deleteBtn.addEventListener('click', () => handleDelete(dish));
 
-    actions.append(editBtn, deleteBtn);
-    li.append(name, actions);
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    li.appendChild(name);
+    li.appendChild(actions);
     el.dishList.appendChild(li);
   });
 }
